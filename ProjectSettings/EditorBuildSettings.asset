@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/Main.unity
+    guid: 7784a7fd825f48f409b9be3efcdd93a5
+  - enabled: 1
+    path: Assets/Scenes/Projects/OddEven.unity
+    guid: a4717adce958722499b62e61309f1bdf
+  - enabled: 1
+    path: Assets/Scenes/Projects/Metrics.unity
+    guid: bcc6f38f61692144c8664e101abf29d9
+  - enabled: 1
+    path: Assets/Scenes/Projects/AgeInDays.unity
+    guid: d1ff2c0f3f1f7b344ad1107213cd3dba
+  - enabled: 1
+    path: Assets/Scenes/Projects/PsychicGuesser.unity
+    guid: 1d3458e1269590a4685215e8a20b03f0
+  - enabled: 1
+    path: Assets/Scenes/Projects/PrimeChecker.unity
+    guid: 546dfdbd32e81864abe4bddedc0c429e
+  - enabled: 1
+    path: Assets/Scenes/Projects/Floyd'sTriangle.unity
+    guid: 3f262255bf97ba845851b97406a19779
+  - enabled: 1
+    path: Assets/Scenes/Projects/CountTo10k.unity
+    guid: 59ee47f652ebef148a6a87be0a52c147
+  - enabled: 1
+    path: Assets/Scenes/Assessments/IA1 Folio/FibonacciSequence.unity
+    guid: ca36114e6fb3733419d38b3ce96c080d
+  - enabled: 1
+    path: Assets/Scenes/Assessments/IA1 Folio/MathMastermind.unity
+    guid: 248b5f4a6a7879745ae907c6bbe8446b
+  - enabled: 1
+    path: Assets/Scenes/Assessments/IA1 Folio/KaprekarNumbers.unity
+    guid: 42e57dc47519016479272e178d1df17b
+  - enabled: 1
+    path: Assets/Scenes/Assessments/IA2 Vending Machine/VendingMachine.unity
+    guid: e9c1b806d6bab1d4aa125d7716d5e720
+  - enabled: 1
+    path: Assets/Scenes/Assessments/Hangman/Hidden/HangmanGame.unity
+    guid: ea64c9e139c5da648aa5397dd9125e3a
+  - enabled: 1
+    path: Assets/Scenes/Assessments/Hangman/Hangman.unity
+    guid: 27988071dd97fe54590e27e6db57ae48
+  - enabled: 1
+    path: Assets/Scenes/Assessments/Encryption/CaesarCipher.unity
+    guid: 8cde6fd2bff66d74f83b7da3ba8ba4b0
+  - enabled: 1
+    path: Assets/Scenes/Projects/Assessments.unity
+    guid: 15fc27d8b076fff4caa718437f9428f4
+  - enabled: 1
+    path: Assets/Scenes/Assessments/Mobile/FA1 Blackjack/Blackjack.unity
+    guid: daea5e370255b1f47a862cf9c67a1ac5
+  - enabled: 1
+    path: Assets/Scenes/Assessments/Mobile/FA2 Contacts/Contacts.unity
+    guid: fd8db195092762c4089f00b76e1fe186
+  - enabled: 1
+    path: Assets/Scenes/Assessments/Mobile/IA2 Valemon/Valemon.unity
+    guid: 3d7556ac0981050408109522c1670624
+  m_configObjects: {}
