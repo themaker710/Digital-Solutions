@@ -246,7 +246,23 @@ public class DataManager : MonoBehaviour
             }
         }
     }
+    internal void UpdatePurchased(int uid)
+    {
+        //Get all purchased pokemon for the current user from the "transactions" table
+        var reader = DB.QueryDB("SELECT PokemonID FROM sales WHERE UserID = " + uid);
+        List<int> purchased = new List<int>();
+        while (reader.Read())
+            purchased.Add(reader.SafeGet<int>(0));
 
+        //Update all appropriate rows from the 'controller.pokemon' variable
+        foreach (int i in purchased)
+        {
+            controller.pokemon[pokeIDMain[i]].owned = true;
+            //If the pokemon is in the main list, update it
+            if (controller.pokemon[pokeIDMain[i]].row != null)
+                controller.pokemon[pokeIDMain[i]].row.UpdateData(controller.pokemon[pokeIDMain[i]], controller);
+        }
+    }
 
     IEnumerator LoadDataIndicator()
     {

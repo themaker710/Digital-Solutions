@@ -31,7 +31,9 @@ public class PokemonRowController : MonoBehaviour
         controller = con;
 
         nameText.text = p.name;
-        costText.text = "$"+ p.Cost.ToString();
+
+        if (p.owned) costText.text = "Owned";
+        else costText.text = "$" + p.Cost.ToString();
         statText.text = p.StatTotal.ToString();
         genText.text = p.generation.ToString();
         idText.text = p.id.ToString();
@@ -52,4 +54,5 @@ public class PokemonRowController : MonoBehaviour
 
         btn.onClick.AddListener(() => controller.ViewPokemonDetails(p.id));
     }
+
 }

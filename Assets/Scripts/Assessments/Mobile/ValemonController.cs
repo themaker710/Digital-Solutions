@@ -4,6 +4,8 @@ using DB = AsyncDBManager;
 using System.Data;
 using UnityEngine.SceneManagement;
 using System.Collections.Generic;
+using UnityEngine.UI;
+using UnityEngine.Timeline;
 
 public class ValemonController : MonoBehaviour
 {
@@ -25,6 +27,7 @@ public class ValemonController : MonoBehaviour
     public Canvas mainMenuCanvas;
     public Canvas authCanvas;
     public Canvas pokeInfoCanvas;
+    public Canvas detailsCanvas;
 
     public GameObject scrollContent;
     public TMP_InputField searchInput;
@@ -34,9 +37,22 @@ public class ValemonController : MonoBehaviour
     public TMP_Dropdown generationDropdown;
     public TMP_Dropdown classDropdown;
 
+    //Text fields for pokemon info page
+    public TMP_Text pokemonNameText;
+    public TMP_Text pokemonDescText;
+    public TMP_Text[] statText;
+    public TMP_Text pokemonAbilitiesText;
+    public TMP_Text statTotalText;
+    public TMP_Text costText;
+
+    public RawImage pokemonImage;
+    public Button buyButton;
+    
+
     public DataManager dataManager;
 
     internal Pokemon[] pokemon;
+    internal int[] purchasedPokemon;
 
     int curUID;
 
@@ -147,7 +163,7 @@ public class ValemonController : MonoBehaviour
                 errorText.color = Color.green;
                 errorText.text = "Login successful, loading...";
                 curUID = reader.SafeGet<int>(0);
-
+                dataManager.UpdatePurchased(curUID);
                 authCanvas.gameObject.SetActive(false);
                 LoadMainList();
             }
@@ -219,9 +235,71 @@ public class ValemonController : MonoBehaviour
 
     internal void ViewPokemonDetails(int id)
     {
-        Debug.Log("Viewing page for pokemon: " + id + "\n" + pokemon[dataManager.pokeIDMain[id]].ToString());
+        Pokemon curPokemon = pokemon[dataManager.pokeIDMain[id]];
+
+        Debug.Log("Viewing page for pokemon: " + id + "\n" + curPokemon.ToString());
+
+        //Set pokemon stat variables
+        statText[0].text = "HP: " + curPokemon.hp.ToString();
+        statText[1].text = "Attack: " + curPokemon.attack.ToString();
+        statText[2].text = "Defense: " + curPokemon.defense.ToString();
+        statText[3].text = "Height: " + curPokemon.height.ToString() + "m";
+        statText[4].text = "Speed: " + curPokemon.speed.ToString();
+        statText[5].text = "Sp. Attack: " + curPokemon.sp_attack.ToString();
+        statText[6].text = "Sp. Defense: " + curPokemon.sp_defense.ToString();
+        statText[7].text = "Weight: " + curPokemon.weight.ToString() + "kg";
+
+        pokemonAbilitiesText.text = "Abilities: " + string.Join(", ", curPokemon.abilities);
+        //Set UI text
+        pokemonNameText.text = curPokemon.name;
+        pokemonDescText.text = $"Generation: {curPokemon.generation} | Class: {curPokemon.classification}";
+
+        //Set Image
+        pokemonImage.texture = curPokemon.texture;
+
+        //Set UI button
+        buyButton.onClick.RemoveAllListeners();
+        buyButton.onClick.AddListener(() => BuyPokemon(id));
+
+        TMP_Text t = buyButton.GetComponentInChildren<TMP_Text>();
+
+        if (curPokemon.owned)
+        {
+            t.text = "Owned";
+            buyButton.interactable = false;
+        }
+        else
+        {
+            t.text = "Purchase";
+            buyButton.interactable = true;
+        }
+
+        statTotalText.text = "Stat Total: " + curPokemon.StatTotal.ToString();
+        costText.text = "$" + curPokemon.Cost.ToString();
+
+        //Open details page
+        mainMenuCanvas.gameObject.SetActive(false);
+        detailsCanvas.gameObject.SetActive(true);
+
     }
 
+    void BuyPokemon(int id)
+    {
+        int refID = dataManager.pokeIDMain[id];
+        //Add pokemon to transaction table (fields: 'UserID', 'Cost', 'Date', 'PokemonID', 'PaymentType') for current user
+        DB.QueryDB($"INSERT INTO sales (UserID, Cost, Date, PokemonID, PaymentType) VALUES ({curUID}, {pokemon[refID].Cost}, '{System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}', {id}, 'Credit Card')");
+
+        //Update Record and UI
+        pokemon[refID].owned = true;
+        //Disabled gameobjects (such as this reference here) can have any non MonoBehaviour-inherited classes accessed (i.e. Start, Update, etc.). Coroutines also are stopped.
+        pokemon[refID].row.UpdateData(pokemon[refID], this);
+
+        //Update details screen
+        buyButton.interactable = false;
+        buyButton.GetComponentInChildren<TMP_Text>().text = "Owned";
+    }
+
+ 
     void Awake()
     {
         DB.InitiateConnection("valemon.db");
@@ -265,6 +343,8 @@ internal class Pokemon
     internal string height;
     internal string weight;
     internal int speed;
+
+    internal bool owned;
 
     internal PokemonRowController row;
 
