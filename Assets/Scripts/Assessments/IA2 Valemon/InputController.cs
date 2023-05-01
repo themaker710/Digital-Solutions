@@ -21,14 +21,21 @@ public class InputController : MonoBehaviour
     public Texture2D visibleTexture;
     public Texture2D hiddenTexture;
 
+    //Profile inputs
+    public TMP_InputField profileNameInput;
+    public TMP_InputField profileAddressInput;
+    public TMP_InputField profileEmailInput;
+    public TMP_InputField profileCurrPassInput;
+    public TMP_InputField profileNewPassInput;
+
     public TMP_Text paymentButtonText;
 
     public bool isPasswordValid, isEmailValid, paymentConnected = false;
-    public bool AllowRegister() => !(addressInput.text.IsNullOrWhiteSpace() && nameInput.text.IsNullOrWhiteSpace()) && PasswordsMatch(hashedPass, passwordConfInput.text) && paymentConnected;
-
-    internal string hashedPass;
-
+    public bool AllowRegister() => !(addressInput.text.IsNullOrWhiteSpace() || nameInput.text.IsNullOrWhiteSpace()) && PasswordsMatch(hashedPass, passwordConfInput.text) && paymentConnected;
     
+    public bool AllowUpdate() => !(profileAddressInput.text.IsNullOrWhiteSpace() || profileNameInput.text.IsNullOrWhiteSpace()) && PasswordsMatch(hashedPass, profileCurrPassInput.text);
+    
+    internal string hashedPass;
 
     public bool PasswordsMatch(string hashed, string provided) => Extensions.VerifyHashedPassword(hashed, provided);
 

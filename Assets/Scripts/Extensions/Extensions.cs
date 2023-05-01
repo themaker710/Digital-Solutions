@@ -176,6 +176,17 @@ internal static class Extensions
     {
         return char.IsLetter(c);
     }
+    internal static string Initials(this string s)
+    {
+        string[] words = s.Split(' ');
+
+        //Get first character from every word and combine into a result string
+        string result = "";
+        foreach (string w in words)
+            result += w[0].ToUpper();
+
+        return result;
+    }
     //internal static string Join(this System.Array arr, string seperator)
     //{
     //    return string.Join(seperator, arr);

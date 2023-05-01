@@ -179,6 +179,7 @@ public class DataManager : MonoBehaviour
                 id = reader.SafeGet<int>(0),
                 name = reader.SafeGet<string>(1),
                 classification = reader.SafeGet<string>(2),
+                //Select the type from a set of predetermined name & color combinations.
                 type1 = types.SingleOrDefault((x) => x.name.ToLower() == reader.SafeGet<string>(3)),
                 type2 = types.SingleOrDefault((x) => x.name.ToLower() == reader.SafeGet<string>(4)),
                 abilities = new string[6] { reader.SafeGet<string>(5), reader.SafeGet<string>(6), reader.SafeGet<string>(7), reader.SafeGet<string>(8), reader.SafeGet<string>(9), reader.SafeGet<string>(10) },
@@ -203,7 +204,7 @@ public class DataManager : MonoBehaviour
 
         pokemon = pokemon.OrderBy(x => x.id).ToArray();
 
-        //Make sure the pokemon array is refernced correctly (i.e. not as a pointer - caused issues)
+        //Make sure the pokemon array is assigned as a new variable in memory (direct assignment caused reference/pointer issues)
         controller.pokemon = (Pokemon[])pokemon.Clone();
 
         Debug.Log("All pokemon loaded into memory");
@@ -288,7 +289,7 @@ public class DataManager : MonoBehaviour
             yield return null;
         }
 
-        //Begin creation of pokemon array in memory. Occurs in the background
+        //Begin creation of pokemon array in memory. Occurs in the background while user is logging in.
         StartCoroutine(LoadPokemon());
 
         loadingScreen.SetActive(false);
@@ -297,7 +298,7 @@ public class DataManager : MonoBehaviour
     }
     IEnumerator AnimateLoadText()
     {
-        //Animate dots on loading text every 0.5 seconds
+        //Animate dots on loading text every 0.5 seconds to indicate progress
         string dots = "";
 
         while (loading)
@@ -498,6 +499,7 @@ public class DataManager : MonoBehaviour
         sql = sql.Substring(0, sql.Length - 2);
         sql += ");";
 
+        //Execute query
         DB.QueryDB(sql);
 
         Debug.Log("Table " + tableName + " created");
@@ -514,6 +516,7 @@ public class DataManager : MonoBehaviour
 
         List<string> types = new List<string>();
 
+        //Get all types from reader
         while (reader.Read())
             types.Add(reader.GetString(0));
 
@@ -532,9 +535,11 @@ public class DataManager : MonoBehaviour
 
         List<string> generations = new List<string>();
 
+        //Get all genns from reader
         while (reader.Read())
             generations.Add(reader.GetString(0));
 
+        //Return sorted list
         return generations.OrderBy(x => x).ToList();
     }
 
@@ -548,9 +553,11 @@ public class DataManager : MonoBehaviour
 
         List<string> classes = new List<string>();
 
+        //Get all classes from reader
         while (reader.Read())
             classes.Add(reader.GetString(0));
 
+        //Return sorted list
         return classes.OrderBy(x => x).ToList();
     }
 }

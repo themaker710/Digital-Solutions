@@ -6,6 +6,8 @@ using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine.Timeline;
+using UnityEngine.EventSystems;
+using Microsoft.Win32;
 
 public class ValemonController : MonoBehaviour
 {
@@ -47,7 +49,12 @@ public class ValemonController : MonoBehaviour
 
     public RawImage pokemonImage;
     public Button buyButton;
-    
+
+    //Profile Page
+    public TMP_Text initialText;
+
+    public GameObject profileScrollContent;
+    public GameObject purchasedRowPrefab;
 
     public DataManager dataManager;
 
@@ -112,7 +119,7 @@ public class ValemonController : MonoBehaviour
             errorDialogText.text = "Check your passwords match and you have filled all fields";
             return;
         }
-        
+
         //Add user to DB
         DB.QueryDB($"INSERT INTO users (Email, HashedPassword, Name, Address) VALUES ('{inputController.emailInput.text}', '{inputController.hashedPass}', '{inputController.nameInput.text}', '{inputController.addressInput.text}')");
 
@@ -178,6 +185,59 @@ public class ValemonController : MonoBehaviour
         }
         reader.Close();
     }
+
+    public void ViewProfile()
+    {
+        //Populate profile information on the profile page from the 'user' table
+        IDataReader reader = DB.QueryDB($"SELECT Email, Name, Address FROM users WHERE ID = {curUID}");
+        if (reader.Read())
+        {
+            initialText.text = reader.SafeGet<string>(1).Initials();
+            inputController.profileNameInput.text = reader.SafeGet<string>(1);
+            inputController.profileAddressInput.text = reader.SafeGet<string>(2);
+            inputController.profileEmailInput.text = reader.SafeGet<string>(0);
+        }
+        reader.Close();
+
+        inputController.profileCurrPassInput.text = "";
+        inputController.profileNewPassInput.text = "";
+
+        //Populate purchased pokemon list
+        foreach (Transform child in profileScrollContent.transform)
+            Destroy(child.gameObject);
+
+        foreach (Pokemon p in pokemon)
+        {
+            if (p.owned)
+            {
+                GameObject row = Instantiate(purchasedRowPrefab, profileScrollContent.transform);
+                row.GetComponent<PurchasedRowManager>().PopulateData(p.name, p.texture);
+            }
+        }
+    }
+
+    public void SaveProfileInfo()
+    {
+        Debug.Log("Saving");
+        if (inputController.AllowUpdate())
+        {
+            Debug.Log("Validated");
+            //Update table 'users' with new data
+            {
+                //Update user table with new information from profile page.
+                string sql = $"UPDATE users SET name = '{inputController.profileNameInput.text}', address = '{inputController.profileAddressInput.text}', email = '{inputController.profileEmailInput.text}' WHERE id = {curUID}";
+                DB.QueryDB(sql);
+
+                //Update password if the field is present
+                if (!inputController.passwordInput.text.IsNullOrWhiteSpace())
+                {
+                    sql = $"UPDATE users SET hashedpassword = '{Extensions.HashPassword(inputController.passwordInput.text)}' WHERE id = {curUID}";
+                    DB.QueryDB(sql);
+                }
+            }
+
+        }
+    }
     internal void LoadMainList()
     {
         //Populate filter dropdowns
@@ -202,6 +262,7 @@ public class ValemonController : MonoBehaviour
 
         mainMenuCanvas.gameObject.SetActive(true);
     }
+
     public void UpdateList()
     {
         foreach (Transform child in scrollContent.transform)
@@ -299,7 +360,7 @@ public class ValemonController : MonoBehaviour
         buyButton.GetComponentInChildren<TMP_Text>().text = "Owned";
     }
 
- 
+
     void Awake()
     {
         DB.InitiateConnection("valemon.db");
@@ -318,14 +379,12 @@ public class ValemonController : MonoBehaviour
         Screen.SetResolution((screenRes.height / 16) * 9, screenRes.height, true);
     }
 
-    //This is called by the DataManager script when the DB has been validated and loaded, or when the user refreshes the main menu
-    
-
     public void MainMenu()
     {
         SceneManager.LoadScene("Main");
     }
 }
+
 internal class Pokemon
 {
     internal int id;
