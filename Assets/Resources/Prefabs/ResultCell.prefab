@@ -56,7 +56,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   bookTitleText: {fileID: 4890392376676065496}
   bookSubtitleText: {fileID: 4890392376922479593}
-  bookAuthorText: {fileID: 0}
   bookPriceText: {fileID: 4890392377177359528}
   bookCover: {fileID: 4890392376752852900}
   bookButton: {fileID: 4890392376634181035}
@@ -353,7 +352,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -147.8, y: -0.0000042915}
+  m_AnchoredPosition: {x: -144, y: 0.000039057}
   m_SizeDelta: {x: 209.59, y: 275}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4890392376752852901

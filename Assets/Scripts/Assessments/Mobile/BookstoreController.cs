@@ -2,9 +2,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections;
-using System.Security.Policy;
 using UnityEngine.Networking;
-using System.Runtime.CompilerServices;
+using UnityEngine.SceneManagement;
 
 public class BookstoreController : MonoBehaviour
 {
@@ -16,7 +15,11 @@ public class BookstoreController : MonoBehaviour
     public TextMeshProUGUI pageText;
     public TextMeshProUGUI searchStatusText;
 
+    public BookSearchContext searchContext;
+
     bool loading = false;
+
+    public int currSearchID = 0;
 
     // Start is called before the first frame update
     void Start()
@@ -29,14 +32,15 @@ public class BookstoreController : MonoBehaviour
         pageText.text = "/1";
         //Set search status text to empty string
         searchStatusText.text = "";
-        
+
     }
 
     public void SearchBooks(string query)
     {
         if (query.IsNullOrWhiteSpace()) return;
         string url = "https://api.itbook.store/1.0/search/" + query;
-        StartCoroutine(LoadBooks(url));
+        currSearchID++;
+        StartCoroutine(LoadBooks(url, currSearchID));
     }
 
     IEnumerator LoadingAnimation()
@@ -53,11 +57,9 @@ public class BookstoreController : MonoBehaviour
 
             yield return new WaitForSeconds(0.5f);
         }
-
-        searchStatusText.text = "";
     }
 
-    IEnumerator LoadBooks(string url)
+    IEnumerator LoadBooks(string url, int id)
     {
         //Clear book cells from container
         foreach (Transform child in bookCellContainer)
@@ -73,32 +75,60 @@ public class BookstoreController : MonoBehaviour
             StartCoroutine(LoadingAnimation());
             yield return uwr.SendWebRequest();
             loading = false;
+            StopCoroutine(LoadingAnimation());
+            searchStatusText.text = "";
 
+            //Check if web request was successful
             if (uwr.result == UnityWebRequest.Result.Success)
             {
                 //Create new BookSearchResult object from JSON response using JsonUtility
                 BookSearchResult searchResult = JsonUtility.FromJson<BookSearchResult>(uwr.downloadHandler.text);
+                searchResult.query = url;
+                searchResult.searchID = id;
+                
+
+                //Cache search context
+                searchContext = searchResult;
 
                 if (searchResult.error != "0")
                 {
                     //Log error if present
                     Debug.Log("An API error occured when retrieving from:\n" + url);
                     Debug.LogError(searchResult.error);
-                    yield break;
-                }   
-                if (searchResult.total == "0")
+                    //Tell user there was an error
+                    searchStatusText.text = "An error occurred. Try searching something else";
+                }
+                else if (searchResult.total == "0")
                 {
                     Debug.Log("No books found for query:\n" + url);
                     //Tell user no books were found
                     searchStatusText.text = "No books found for query. Try searching something else";
+                }
+
+                if (searchResult.total == "0" || searchResult.error != "0")
+                {
+                    //Clear page text
+                    pageText.text = "/ 0";
+                    //Break out of coroutine
+                    yield break;
+                }
+                //Check if search ID has changed since web request was sent
+                if (id != currSearchID)
+                {
+                    //If search ID has changed, stop loading books from this request
                     yield break;
                 }
 
-                //Log total books found
-                Debug.Log("Total books found: " + searchResult.total);
+                //Calculate page total
+                searchResult.pageTotal = int.Parse(searchResult.total) / 20;
+                //Recache search context
+                searchContext = searchResult;
 
-                //Set page text to total books divided by 10. Parse will succeed as input is always a number
-                pageText.text = "/" + (int.Parse(searchResult.total) / 10);
+                //Log total books found
+                Debug.Log("Total books found: " + searchResult.total + " for query:\n" + searchResult.query);
+
+                //Set page text to total books divided by 20. Parse will succeed as input is always a number
+                pageText.text = "/" + searchContext.pageTotal;
                 //Set page input field text to current page
                 userPageInput.text = searchResult.page;
 
@@ -122,17 +152,71 @@ public class BookstoreController : MonoBehaviour
         }
     }
 
+
+    void ChangePage(int page)
+    {
+
+        //Change input field text to current page
+        userPageInput.text = page.ToString();
+
+        //Load books for page in current context
+        string url = searchContext.query + "/" + page;
+        currSearchID++;
+        StartCoroutine(LoadBooks(url, currSearchID));
+    }
+
+    public void SetPage(string page)
+    {
+        int pageInt = int.Parse(page);
+
+        //Check if page is valid
+        if (pageInt < 1 || pageInt > searchContext.pageTotal) return;
+
+        //Change page
+        ChangePage(pageInt);
+    }
+
+    public void NextPage()
+    {
+        //Get current page from search context
+        int page = int.Parse(searchContext.page);
+        //Increment page if possible
+        if (page < searchContext.pageTotal) page++;
+        //Change page
+        ChangePage(page);
+    }
+
+    public void PrevPage()
+    {
+        //Get current page from search context
+        int page = int.Parse(searchContext.page);
+        //Decrement page if possible
+        if (page > 1) page--;
+        //Change page
+        ChangePage(page);
+    }
+
+    public void MainMenu()
+    {
+        SceneManager.LoadScene("Main");
+    }
 }
 
 [System.Serializable]
-public class BookSearchResult
+
+public class BookSearchContext
+{
+    public string total;
+    public string query;
+    public int searchID;
+    public int pageTotal;
+    public string page;
+}
+public class BookSearchResult : BookSearchContext
 {
     public string error;
-    public string total;
-    public string page;
 
     public Book[] books;
-
 }
 [System.Serializable]
 public class Book

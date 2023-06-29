@@ -28,7 +28,7 @@ public class BookCellManager : MonoBehaviour
 
     IEnumerator LoadBookCover(string url)
     {
-        Debug.Log("Loading book cover from:\n" + url);
+        //Debug.Log("Loading book cover from:\n" + url);
 
         //Download image from URL with UnityWebRequestTexture download handler
         using(UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(url))

@@ -62,4 +62,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Assessments/Mobile/IA2 Valemon/Valemon.unity
     guid: 3d7556ac0981050408109522c1670624
+  - enabled: 1
+    path: Assets/Scenes/Assessments/Mobile/IA3 ITBooks/Bookstore.unity
+    guid: 8895f05272b65ab4e8e56769331ea287
   m_configObjects: {}
