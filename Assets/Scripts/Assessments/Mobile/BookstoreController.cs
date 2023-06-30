@@ -4,6 +4,7 @@ using TMPro;
 using System.Collections;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
+using System.Collections.Concurrent;
 
 public class BookstoreController : MonoBehaviour
 {
@@ -38,9 +39,14 @@ public class BookstoreController : MonoBehaviour
     public void SearchBooks(string query)
     {
         if (query.IsNullOrWhiteSpace()) return;
-        string url = "https://api.itbook.store/1.0/search/" + query;
+        userPageInput.text = "1";
         currSearchID++;
-        StartCoroutine(LoadBooks(url, currSearchID));
+        BookSearchContext context = new BookSearchContext
+        {
+            query = query,
+            searchID = currSearchID
+        };
+        StartCoroutine(LoadBooks(context));
     }
 
     IEnumerator LoadingAnimation()
@@ -59,7 +65,7 @@ public class BookstoreController : MonoBehaviour
         }
     }
 
-    IEnumerator LoadBooks(string url, int id)
+    IEnumerator LoadBooks(BookSearchContext context)
     {
         //Clear book cells from container
         foreach (Transform child in bookCellContainer)
@@ -68,7 +74,7 @@ public class BookstoreController : MonoBehaviour
         }
 
         //Create new UnityWebRequest with URL
-        using (UnityWebRequest uwr = UnityWebRequest.Get(url))
+        using (UnityWebRequest uwr = UnityWebRequest.Get(context.url))
         {
             //Send web request and wait for response
             loading = true;
@@ -83,9 +89,9 @@ public class BookstoreController : MonoBehaviour
             {
                 //Create new BookSearchResult object from JSON response using JsonUtility
                 BookSearchResult searchResult = JsonUtility.FromJson<BookSearchResult>(uwr.downloadHandler.text);
-                searchResult.query = url;
-                searchResult.searchID = id;
-                
+                //Merge search context with search result
+                searchResult.query = context.query;
+                searchResult.searchID = context.searchID;                
 
                 //Cache search context
                 searchContext = searchResult;
@@ -93,14 +99,14 @@ public class BookstoreController : MonoBehaviour
                 if (searchResult.error != "0")
                 {
                     //Log error if present
-                    Debug.Log("An API error occured when retrieving from:\n" + url);
+                    Debug.Log("An API error occured when retrieving from:\n" + context.url);
                     Debug.LogError(searchResult.error);
                     //Tell user there was an error
                     searchStatusText.text = "An error occurred. Try searching something else";
                 }
                 else if (searchResult.total == "0")
                 {
-                    Debug.Log("No books found for query:\n" + url);
+                    Debug.Log("No books found for query: " + context.query);
                     //Tell user no books were found
                     searchStatusText.text = "No books found for query. Try searching something else";
                 }
@@ -113,7 +119,7 @@ public class BookstoreController : MonoBehaviour
                     yield break;
                 }
                 //Check if search ID has changed since web request was sent
-                if (id != currSearchID)
+                if (context.searchID != currSearchID)
                 {
                     //If search ID has changed, stop loading books from this request
                     yield break;
@@ -125,10 +131,10 @@ public class BookstoreController : MonoBehaviour
                 searchContext = searchResult;
 
                 //Log total books found
-                Debug.Log("Total books found: " + searchResult.total + " for query:\n" + searchResult.query);
+                Debug.Log("Found " + searchResult.total + " books for query: '" + searchResult.query + "'");
 
                 //Set page text to total books divided by 20. Parse will succeed as input is always a number
-                pageText.text = "/" + searchContext.pageTotal;
+                pageText.text = "/ " + searchContext.pageTotal;
                 //Set page input field text to current page
                 userPageInput.text = searchResult.page;
 
@@ -142,11 +148,13 @@ public class BookstoreController : MonoBehaviour
                     //Set book data to book cell manager
                     bookCellManager.SetBook(book);
                 }
+
+                Debug.Log("Books loaded for query '" + context.query + "' on page " + context.page + "\n" + context.url);
             }
             else
             {
                 //Log error if present
-                Debug.Log("An error occurred while retrieving data from:\n" + url);
+                Debug.Log("An error occurred while retrieving data from:\n" + context.url);
                 Debug.LogError(uwr.error);
             }
         }
@@ -155,14 +163,14 @@ public class BookstoreController : MonoBehaviour
 
     void ChangePage(int page)
     {
-
         //Change input field text to current page
         userPageInput.text = page.ToString();
 
         //Load books for page in current context
-        string url = searchContext.query + "/" + page;
         currSearchID++;
-        StartCoroutine(LoadBooks(url, currSearchID));
+        searchContext.searchID = currSearchID;
+        searchContext.page = page.ToString();
+        StartCoroutine(LoadBooks(searchContext));
     }
 
     public void SetPage(string page)
@@ -170,7 +178,12 @@ public class BookstoreController : MonoBehaviour
         int pageInt = int.Parse(page);
 
         //Check if page is valid
-        if (pageInt < 1 || pageInt > searchContext.pageTotal) return;
+        if (pageInt < 1 || pageInt > searchContext.pageTotal)
+        {
+            //If page is invalid, reset page input field text to current page
+            userPageInput.text = searchContext.page;
+            return;
+        }
 
         //Change page
         ChangePage(pageInt);
@@ -182,6 +195,7 @@ public class BookstoreController : MonoBehaviour
         int page = int.Parse(searchContext.page);
         //Increment page if possible
         if (page < searchContext.pageTotal) page++;
+        else return;
         //Change page
         ChangePage(page);
     }
@@ -192,6 +206,7 @@ public class BookstoreController : MonoBehaviour
         int page = int.Parse(searchContext.page);
         //Decrement page if possible
         if (page > 1) page--;
+        else return;
         //Change page
         ChangePage(page);
     }
@@ -206,11 +221,16 @@ public class BookstoreController : MonoBehaviour
 
 public class BookSearchContext
 {
+    internal string endpoint;
     public string total;
     public string query;
     public int searchID;
     public int pageTotal;
     public string page;
+    public string url => endpoint + query + "/" + page;
+
+    //Constructor to set default values
+    public BookSearchContext() { page = "1"; endpoint = "https://api.itbook.store/1.0/search/"; }
 }
 public class BookSearchResult : BookSearchContext
 {
